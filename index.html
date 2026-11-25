@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>A mi utunk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: gyengéd, játékos, személyes – egy kézzel rajzolt kincses térkép, amit neki rajzoltam
+   IDEA: úti térkép pöttyözött ösvénnyel, gombostűkkel – a végén a dec. 14-i találkozás
+   PICTURE: repülő íven Olaszországból hozzá, alatta élő visszaszámláló
+   COLOUR and TYPE: meleg papírfehér, mély rózsa, tengerkék, napsárga pötty; Caveat kézírás + Nunito
+   LAYOUT: hős + visszaszámláló, kanyargó ösvény állomásokkal, célállomás szívvel, levélke */
+:root{color-scheme:light dark;
+--bg:light-dark(#fff7f2,#1c1220);--paper:light-dark(#ffffff,#271a2c);--ink:light-dark(#2a1a22,#f6e9ee);
+--soft:light-dark(#7a5d68,#c9b2bc);--rose:light-dark(#c8325a,#ff6f93);--sea:light-dark(#2f6f73,#7cc7c9);
+--sun:#f2b632;--line:light-dark(#ecd6dc,#3e2c44);--shadow:light-dark(0 10px 30px -12px #c8325a40,0 10px 30px -12px #0008)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 Nunito,system-ui,sans-serif;overflow-x:clip}
+.band{padding:clamp(28px,4vw,64px) max(5vw,16px)}
+.wrap{max-width:1100px;margin:0 auto}
+.hand{font-family:Caveat,cursive}
+h1,h2{font-family:Caveat,cursive;font-weight:700;line-height:1.05;text-wrap:balance;margin:0}
+h1{font-size:clamp(44px,7vw,72px)}
+h2{font-size:clamp(36px,5vw,52px)}
+.sub{color:var(--soft);max-width:34em;margin:.6em auto 0}
+/* hero */
+.hero{text-align:center;padding-top:clamp(36px,6vw,80px);background:
+ radial-gradient(1200px 500px at 50% -10%,light-dark(#ffe1e8,#3a1d33),transparent 70%)}
+.flight{position:relative;max-width:820px;margin:18px auto 0;aspect-ratio:820/260}
+.flight svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.place{font-family:Caveat,cursive;font-size:26px;fill:var(--ink)}
+.count{display:flex;justify-content:center;gap:clamp(8px,2vw,18px);flex-wrap:wrap;margin-top:6px}
+.cell{background:var(--paper);border-radius:18px;box-shadow:var(--shadow);padding:14px 10px 10px;width:clamp(76px,18vw,118px)}
+.cell b{display:block;font-size:clamp(34px,6vw,54px);line-height:1;color:var(--rose);font-variant-numeric:tabular-nums}
+.cell span{font-size:14px;color:var(--soft)}
+.goal{margin-top:18px;font-size:clamp(24px,3vw,30px)}
+.goal strong{color:var(--rose)}
+/* path */
+.trail{position:relative;margin-top:24px}
+.trail>svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.stop{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 88px minmax(0,1fr);align-items:center;margin:0 0 clamp(36px,6vw,64px)}
+.pin{grid-column:2;justify-self:center;width:56px;height:68px;position:relative;z-index:2}
+.pin svg{width:100%;height:100%;filter:drop-shadow(0 6px 6px #0002)}
+.card{position:relative;z-index:4;background:var(--paper);border-radius:22px;padding:22px 24px;box-shadow:var(--shadow);border:1px solid var(--line);
+ opacity:0;transform:translateY(24px);transition:opacity .7s,transform .7s}
+.stop.on .card{opacity:1;transform:none}
+.stop:nth-child(odd) .card{grid-column:3;grid-row:1}
+.stop:nth-child(even) .card{grid-column:1;grid-row:1;text-align:right}
+.stop .pin{grid-row:1}
+.when{font-family:Caveat,cursive;font-size:26px;color:var(--sea);line-height:1}
+.card h3{margin:.2em 0 .3em;font-size:22px;line-height:1.25}
+.card p{margin:0;color:var(--soft)}
+.stop.final .card{background:var(--rose);color:#fff;border:0}
+.stop.final .card p,.stop.final .when{color:#ffe7ee}
+.photos{display:grid;gap:12px;margin:0 0 16px}
+.photos.n2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.photo{background:#fff;padding:8px 8px 10px;border-radius:4px;box-shadow:0 8px 18px -10px #0006;transform:rotate(-1.6deg)}
+.stop:nth-child(even) .photo,.photos.n2 .photo:nth-child(2){transform:rotate(1.6deg)}
+.stop:nth-child(even) .photos.n2 .photo:nth-child(2){transform:rotate(-1.6deg)}
+.photo img{display:block;width:100%;height:auto;aspect-ratio:3/4;max-height:480px;object-fit:cover;object-position:50% 30%;border-radius:2px}
+.photos.n2 .photo img{aspect-ratio:3/4;max-height:none}
+.photo .ph{display:block;width:100%;aspect-ratio:4/3;border-radius:2px}
+.photo .ph.soon{color:#c8325a}
+.photo .ph{display:grid;place-content:center;justify-items:center;gap:6px;color:#9b7f8a;font-size:14px;text-align:center;
+ border:2px dashed #e7c9d2;background:repeating-linear-gradient(135deg,#fdf2f5 0 12px,#fff 12px 24px)}
+.photo .ph svg{width:34px;height:34px}
+.stop.final .photo .ph{border-color:#f3b6c6}
+.stop.future .card{border:2px dashed var(--rose);box-shadow:none}
+.note{font-size:13px;color:var(--soft);text-align:center;margin:8px 0 0}
+/* letter */
+.letter{max-width:640px;margin:0 auto;background:var(--paper);border-radius:26px;padding:clamp(24px,4vw,44px);box-shadow:var(--shadow);
+ position:relative;border:1px solid var(--line)}
+.letter .hand{font-size:clamp(26px,3.4vw,32px);line-height:1.3;margin:0}
+.letter .hand+.hand{margin-top:.6em}
+.letter .sig{text-align:right;color:var(--rose);margin-top:14px}
+.stamp{position:absolute;top:-22px;right:22px;width:64px;height:76px;transform:rotate(8deg)}
+.open{display:block;margin:22px auto 0;font:800 17px Nunito,sans-serif;color:#fff;background:var(--rose);border:0;border-radius:999px;
+ padding:12px 26px;min-height:44px;cursor:pointer}
+.open:focus-visible{outline:3px solid var(--sun);outline-offset:3px}
+.hidden{display:none}
+footer{text-align:center;color:var(--soft);font-size:14px;padding-bottom:40px}
+.jump{margin-top:16px;font:800 16px Nunito,sans-serif;color:var(--rose);background:transparent;border:2px solid var(--rose);
+ border-radius:999px;padding:10px 22px;min-height:44px;cursor:pointer}
+.jump:focus-visible,.open:focus-visible{outline:3px solid var(--sun);outline-offset:3px}
+.now{position:absolute;left:0;top:0;width:0;height:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .4s}
+.now.ready{opacity:1}
+.now-dot{position:absolute;left:-23px;top:-23px;width:46px;height:46px;border-radius:50%;background:var(--sun);color:#2a1a22;
+ display:grid;place-items:center;font:700 20px/1 Caveat,cursive;box-shadow:0 0 0 4px var(--bg),0 8px 16px -6px #0006}
+.now-dot::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:3px solid var(--sun);animation:ping 2.2s ease-out infinite}
+@keyframes ping{from{transform:scale(1);opacity:.9}to{transform:scale(1.8);opacity:0}}
+.now-tag{position:absolute;top:-27px;white-space:nowrap;background:var(--paper);border:2px solid var(--sun);border-radius:18px;
+ padding:6px 14px 7px;box-shadow:var(--shadow);display:flex;flex-direction:column;line-height:1.15}
+.now-tag b{font:700 24px/1 Caveat,cursive;color:var(--rose)}
+.now-tag span{font-size:13px;color:var(--soft)}
+.now.r .now-tag{left:36px}.now.l .now-tag{right:36px}.now.notag .now-tag{display:none}
+@media(max-width:700px){
+ .stop{grid-template-columns:64px minmax(0,1fr)}
+ .pin{grid-column:1;width:46px;height:56px}
+ .stop:nth-child(odd) .card,.stop:nth-child(even) .card{grid-column:2;text-align:left}
+ .place{font-size:34px}
+}
+@media(max-width:700px){.now-tag{display:none}.now-dot{width:38px;height:38px;left:-19px;top:-19px;font-size:17px}}
+@media(prefers-reduced-motion:reduce){.now-dot::after{animation:none;opacity:0}.card{transition:none;opacity:1;transform:none}.plane{display:none}}
+</style>
+</head>
+<body>
+
+<header class="band hero">
+  <div class="wrap">
+    <h1 id="title">Még egy kicsit, és újra együtt</h1>
+    <p class="sub">Most kb 1050 kilométer van köztünk, de ez a térkép oda vezet, ahol újra találkozunk majd. Görgess végig rajta – ez eddig a mi utunk.</p>
+
+    <div class="flight" aria-hidden="true">
+      <svg viewBox="0 0 820 260">
+        <path id="arc" d="M110 200 C 260 20, 560 20, 710 200" fill="none" stroke="var(--rose)" stroke-width="3" stroke-dasharray="2 12" stroke-linecap="round"/>
+        <g transform="translate(110 200)"><circle r="34" fill="var(--sea)" opacity=".15"/><circle r="9" fill="var(--sea)"/></g>
+        <g transform="translate(710 200)"><circle r="34" fill="var(--rose)" opacity=".15"/>
+          <path d="M0 10 C-22 -6 -12 -22 0 -12 C12 -22 22 -6 0 10Z" fill="var(--rose)"/></g>
+        <text class="place" x="110" y="252" text-anchor="middle">én, Olaszországban</text>
+        <text class="place" x="710" y="252" text-anchor="middle">Anna</text>
+        <g class="plane">
+          <path d="M-14 -4 L10 -1 L16 0 L10 1 L-14 4 L-10 0Z M-2 -1 L-8 -12 L-3 -12 L6 -1Z M-2 1 L-8 12 L-3 12 L6 1Z" fill="var(--ink)"/>
+          <animateMotion dur="7s" repeatCount="indefinite" rotate="auto"><mpath href="#arc"/></animateMotion>
+        </g>
+      </svg>
+    </div>
+
+    <div class="count" id="count" role="timer" aria-live="off">
+      <div class="cell"><b id="d">–</b><span>nap</span></div>
+      <div class="cell"><b id="h">–</b><span>óra</span></div>
+      <div class="cell"><b id="m">–</b><span>perc</span></div>
+      <div class="cell"><b id="s">–</b><span>másodperc</span></div>
+    </div>
+    <p class="goal hand">…és <strong>december 14-én</strong> végre újra megölelhetlek.</p>
+    <button class="jump" id="jump" type="button">Mutasd, hol tartunk most</button>
+  </div>
+</header>
+
+<main class="band">
+  <div class="wrap">
+    <h2 style="text-align:center">A mi térképünk</h2>
+    <p class="note">Az első üzenettől egészen addig, amíg újra hazaérek hozzád.</p>
+    <div class="trail" id="trail">
+      <svg id="road"></svg>
+      <div id="stops"></div>
+      <div class="now" id="now" aria-hidden="true"><div class="now-dot" id="nowDot">most</div><div class="now-tag"><b id="nowTitle">Most itt tartunk</b><span id="nowDays"></span></div></div>
+    </div>
+  </div>
+</main>
+
+<section class="band">
+  <div class="letter">
+    <svg class="stamp" viewBox="0 0 64 76" aria-hidden="true">
+      <rect x="2" y="2" width="60" height="72" rx="4" fill="var(--paper)" stroke="var(--rose)" stroke-width="3" stroke-dasharray="4 4"/>
+      <rect x="10" y="10" width="44" height="56" rx="2" fill="var(--sea)"/>
+      <path d="M32 50 C14 38 20 24 32 32 C44 24 50 38 32 50Z" fill="var(--sun)"/>
+    </svg>
+    <h2 id="letterTitle">Egy levél neked, szerelmem</h2>
+    <button class="open" id="openBtn" type="button">Kinyitom</button>
+    <div id="letterBody" class="hidden"></div>
+  </div>
+</section>
+
+<footer>Készítette: Laci, Olaszországból, sok szeretettel.</footer>
+
+<script>
+{
+/* ======================== A LEVÉL ========================
+   Ide másold be a levelet: a LEVEL utáni két ` jel közé, az ott lévő szöveg helyére.
+   Minden sor külön sorban jelenik meg, üres sor = új bekezdés.
+   A ` jeleket ne töröld ki, és a levélben ne legyen ` jel.
+   - LEVEL_CIM: a levél címe
+   - LEVEL: a levél szövege
+   - LEVEL_ALAIRAS: az aláírás a levél alján (ha nem kell, hagyd üresen: ``)
+   ========================================================== */
+const LEVEL_CIM = `Egy levél neked, szerelmem`;
+
+const LEVEL = `Gondoltam hogy megleplek egy ilyen kis aprósággal, a számláló az előző oldalakon már úgy is rossz dátumot mutat, úgyhogy abból is úgy éreztem kellett egy pontosabb, na meg gondoltam hogy aranyos lenne ha valahol végig tudnánk nézni azt hogy miket éltünk át eddig együtt ketten és látni hogy ahhoz képest már nagyon kevés kell ahhoz hogy találkozzunk.
+
+Ahogy mondtam is az első üzenetes kártyánál, soha nem gondoltam volna hogy ennyire megváltozik majd az életem attól a naptól fogva és hogy egy ilyen valaki lesz az életem része mint te. 
+
+Eleinte ivócimborának szerettél volna engem de végül összebarátkoztunk, aztán kevesebb mint egy hónap múlva már hivatalosan is egy pár voltunk. Ahogy azóta telt az idő napról napra erősödött bennem az az érzés hogy tényleg te vagy az igazi számomra és azóta már teljesen biztos is lettem abban hogy semmilyen módon nem tudom elképzelni nélküled az életemet.
+
+Ez az Olaszországi út volt és lehet lesz is az egyik ha nem a legnagyobb kihívásunk, aminek már a leges leg végén járunk, körülbelül 16 nap múlva már otthon vagyok, és 18 nap múlva már veled lehetek.
+
+Tudom hogy embertelenül nehéz volt ez a 3 hónap de végül is együtt kibírtuk, és ezután már ott van előttünk az egész élet, biztos vagyok benne hogy a legtöbben ezt nem bírták volna ki. Nagyon büszke vagyok rád és magunkra hogy túléltük ezt az egészet és nyilván sok minden másért is
+
+Tudom hogy gyakran nehéz velem és nehéz engem kibírni, szeretném megköszönni hogy te mégis megtettél mindent amit tudtál és maradtál, biztos vagyok benne hogy senki más nem tette volna meg ezt értem és nagyon hálás vagyok neked, szeretnék a legjobb lenni hozzád és megtenni mindent érted, remélem hogy meg tudod nekem bocsájtani azokat amiket valaha elrontottam és megengeded hogy bizonyítsak
+
+Nagyon hálás vagyok azért hogy te vagy a barátnőm és mindenért amit te csináltál vagy tőled kaptam, te vagy életem legnagyobb ajándéka és soha nem is tudnék tőled jobbat kívánni, még ha akarnék se számomra te vagy az egyetlen ember akivel le szeretném élni az életem hátralévő részét és az egyetlen dolog ami bánt hogy nem ismertelek meg téged hamarabb
+
+Köszönök mindent, hogy vagy nekem, hogy elviselsz és elviseltél engem mindig, hogy rámírtál, hogy mindig kezdeményeztél, hogy nem adtad fel soha ezt az egészet és itt maradtál, nem tudom szavakba önteni azt hogy mennyire hálás vagyok azért hogy az életem része vagy és néha nem is tudom felfogni azt hogy hogy vagy te a barátnőm, azt sem tudom sajnos elmondani szavakkal hogy mennyire nagyon szeretlek téged és hogy mennyire fontos vagy számomra
+
+Remélem hogy tetszik ez az egész amit csináltam és örülni fogsz neki`;
+
+const LEVEL_ALAIRAS = `Szeretlek életem, elképzelni sem tudod hogy mennyire, és nagyon hiányzol`;
+/* ===================== A LEVÉL VÉGE ===================== */
+
+const TARGET = new Date('2026-12-14T00:00:00+01:00');
+
+
+/* when: a kártyán megjelenő dátum. at: pontos nap, ehhez igazodik a „most itt tartunk” jelző (a köztes állomások ezek között oszlanak el) */
+const STOPS = [
+  {when:'', title:'Az első üzenet', img:'img/elsouzenet.jpg', text:'Amikor először láttam, hogy rám írtál Instagramon, nem gondoltam volna, hogy ez lesz az a nap, amikor megváltozik az életem. És azt sem, hogy egyszer eljutunk idáig.'},
+  {when:'', title:'Vadna', img:'img/vadna.jpg', text:'Igen, erről már beszéltünk párszor 🤣 Belelöktél a vízbe, és nem is nagyon mertem beszélgetni veled, de a lényeg, hogy itt nem lett vége ennek az egésznek.'},
+  {when:'', title:'Mozi', img:'img/mozikezfogas.jpg', text:'Itt jött az első úgymond „fordulópont”: elmentünk a többiekkel moziba, te megoldottad, hogy mellém kerülj, én pedig végre leküzdöttem minden félelmem, és megfogtam a kezed. A barátságunkból így lett „situationship” 🤣'},
+  {when:'2026. augusztus 10.', title:'Szonja születésnapja', at:'2026-08-10', img:'img/aug10.jpg', text:'Ez az első közös emlékünk, amit némi homály fed. Pontosan csak azt tudom, hogy ezen a napon kérdeztem meg, leszel-e a barátnőm (úgy 8 és 11 óra között valahol 🤣), és te igent mondtál. Azóta hivatalosan is együtt vagyunk.', big:true},
+  {when:'', title:'Mozi, már csak kettesben', img:'img/kozosmozi1.jpg', text:'Az első közös mozizásunk kettesben. Ezúttal nem kellett megoldanod, hogy mellém kerülj.'},
+  {when:'', title:'Lego a Mekiben', img:'img/lego.jpg', text:'Összeraktuk az első közös legónkat, a lehető legjobb helyen: a Mekiben 🤣'},
+  {when:'', title:'Szabadulószoba és mozi', img:['img/szabaduloszoba.jpg','img/moziszabaduloszoba.jpg'], text:'Egy horror szabadulószoba, ahol pár dolog rendesen megijesztett téged 🤣 De veled még bezárva lenni is jó. Utána még aznap moziba is mentünk.'},
+  {when:'', title:'Kolor fesztivál', img:['img/color.png','img/color2.jpg'], text:'Pár barátunkkal a Kolor fesztiválon. Jó volt úgy ott lenni, hogy már a barátnőm vagy.'},
+  {when:'', title:'Biliárd', img:'img/biliard.jpg', text:'Biliárdoztunk, és persze te nyertél.'},
+  {when:'', title:'Az első közös filmezés', img:'img/filmezes1.jpg', text:'Egy este, amikor nem kellett sehova sietni, csak te voltál meg én.'},
+  {when:'', title:'Másodszor nálad', img:'img/filmezes2.jpg', text:'A második közös filmezésünk. Kezdett természetessé válni, hogy ott vagyok melletted, és ez nagyon jó érzés volt.'},
+  {when:'', title:'Balázs születésnapja', img:'img/utolsobuli.jpg', text:'A buli, ahol sehogy sem találtam meg a bézs… vagy törtfehér? táskádat 🤣'},
+  {when:'szeptember 10.', title:'Az első hónapforduló', at:'2026-09-10', text:'Az első hónapunk együtt. Egy hónap, és már el sem tudtam képzelni a napjaimat nélküled.', big:true},
+  {when:'', title:'Kiutazás Olaszországba', text:'Aztán el kellett jönnöm Olaszországba. Nehéz volt otthon hagyni téged, de tudtam, hogy ez csak egy kitérő az utunkon, nem a vége.'},
+  {when:'', title:'Hívások Olaszországból', img:'img/hivas.jpg', text:'Azóta a hívásaink tartják bennem a lelket. Akármilyen hosszú a nap, a hangod a legjobb része.'},
+  {when:'', title:'Virág neked', img:'img/virag.jpg', text:'A második hónapforduló előtt küldtem neked egy virágot. Lehet, hogy amíg nem vagyok otthon, többet már nem tudok küldeni, de ha hazaérek, ezt is bepótolom: nem csak egy csokrot kapsz majd, hanem több százezret, és persze még sok minden mást is.'},
+  {when:'október 10.', title:'A második hónapforduló', at:'2026-10-10', img:'img/honapf2.jpg', text:'Két hónap. Az első, amit távolról ünnepeltünk, ezért csináltam neked egy weboldalt, amin néhány közös képünk van.', big:true},
+  {when:'november 10.', title:'A harmadik hónapforduló', at:'2026-11-10', img:'img/honapf3.jpg', text:'Három hónap, és újra egy weboldal neked, egy ajándék és egy randi jeggyel amit majd ha hazaértem be is válthatsz. Még mindig kilométerek vannak köztünk, mégis egyre közelebb érzem magam hozzád.', big:true},
+  {when:'december 10.', title:'A negyedik hónapforduló', at:'2026-12-10', text:'Ezt már otthon ünnepeljük meg, együtt, ahogy kell. Pár nap csúszás már belefér.', big:true, future:true},
+  {when:'december 14.', title:'Hazautazás', at:'2026-12-14', text:'Hazamegyek hozzád. Ez az olasz út volt eddig a legnagyobb akadályunk, és szinte az egészet leküzdöttük, már a legvégén járunk. Innen pedig vár ránk egy egész közös élet, és még rengeteg szép emlék, amit együtt fogunk megélni.', final:true}
+];
+
+const pin = (s) => {
+  const col = s.final ? 'var(--rose)' : s.big ? 'var(--rose)' : 'var(--sea)';
+  const body = s.future
+    ? `<path d="M28 66 C28 66 4 40 4 25 A24 24 0 0 1 52 25 C52 40 28 66 28 66Z" fill="var(--paper)" stroke="var(--rose)" stroke-width="3" stroke-dasharray="5 4"/>`
+    : `<path d="M28 66 C28 66 4 40 4 25 A24 24 0 0 1 52 25 C52 40 28 66 28 66Z" fill="${col}"/>`;
+  const mid = (s.final||s.big)
+    ? `<path d="M28 36 C14 27 18 15 28 21 C38 15 42 27 28 36Z" fill="${s.future?'var(--rose)':'#fff'}"/>`
+    : `<circle cx="28" cy="25" r="9" fill="var(--paper)"/><circle cx="28" cy="25" r="4" fill="var(--sun)"/>`;
+  return `<svg viewBox="0 0 56 68">${body}${mid}</svg>`;
+};
+
+/* KÉPEK: az img mezőbe írd a kép helyét, pl. img:'img/lego.jpg'
+   Két kép egy állomáshoz: img:['img/egyik.jpg','img/masik.jpg']
+   Ha minden kép a helyén van, írd át false-ra, és eltűnnek az üres keretek. */
+const URES_KERETEK = false;
+
+const CAM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>';
+const HEART = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>';
+const ph = (txt, icon, cls) => `<div class="photos"><div class="photo"><div class="ph ${cls||''}">${icon}${txt}</div></div></div>`;
+const photo = s => {
+  const imgs = [].concat(s.img || []);
+  if (imgs.length) return `<div class="photos${imgs.length > 1 ? ' n2' : ''}">` +
+    imgs.map(src => `<div class="photo"><img src="${esc(src)}" alt="${esc(s.title)}" loading="lazy"></div>`).join('') + `</div>`;
+  if (s.final) return ph('Ez a kép december 14-én készül el', HEART, 'soon');
+  if (s.future) return ph('Ezt a képet együtt csináljuk majd, otthon', HEART, 'soon');
+  return URES_KERETEK ? ph('Ide jön egy kép', CAM) : '';
+};
+const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const stopsEl = document.getElementById('stops');
+stopsEl.innerHTML = STOPS.map((s,i)=>`<div class="stop${s.final?' final':''}${s.future?' future':''}"><div class="pin">${pin(s)}</div>
+  <div class="card">${photo(s)}<div class="when">${s.final?'célállomás':(i+1)+'. állomás'}${s.when?' · '+esc(s.when):''}${s.future?' · hamarosan':''}</div><h3>${esc(s.title)}</h3>${s.text?`<p>${esc(s.text)}</p>`:''}</div></div>`).join('');
+
+stopsEl.querySelectorAll('.photo img').forEach(im => {
+  const fail = () => { im.parentNode.innerHTML = `<div class="ph">${CAM}Nem találom ezt a képet: ${esc(im.getAttribute('src'))}</div>`; };
+  const fit = () => { if(!im.closest('.n2') && im.naturalWidth) im.style.aspectRatio = im.naturalWidth + ' / ' + im.naturalHeight; };
+  if (im.complete) { im.naturalWidth ? fit() : fail(); }
+  else { im.addEventListener('load', fit, {once:true}); im.addEventListener('error', fail, {once:true}); }
+});
+
+/* kanyargó ösvény a gombostűk között */
+const trail = document.getElementById('trail'), road = document.getElementById('road');
+let len = 0, drawn, cum = [], qy = [], ql = [], nowLen = Infinity;
+const drawRoad = () => {
+  const rows = [...stopsEl.children];
+  if(!rows.length) return;
+  const w = trail.clientWidth, narrow = matchMedia('(max-width:700px)').matches;
+  const bulge = narrow ? 8 : Math.min(130, w*.12);
+  // pontok: tű, a sor alsó felének közepe (üres oldalon), a két kártya közötti rés közepe, a következő sor felső fele (üres oldalon), következő tű
+  const Q = [], pinAt = [];
+  rows.forEach((st,k) => {
+    const pn = st.querySelector('.pin');
+    const x = st.offsetLeft + pn.offsetLeft + pn.offsetWidth/2, y = st.offsetTop + pn.offsetTop + pn.offsetHeight*.4;
+    const e = k%2 ? 1 : -1, top = st.offsetTop, bot = top + st.offsetHeight;
+    if(k > 0) Q.push([x + e*bulge, (top + y)/2]);
+    pinAt.push(Q.length); Q.push([x, y]);
+    if(k < rows.length-1){ Q.push([x + e*bulge, (y + bot)/2]); Q.push([x, (bot + rows[k+1].offsetTop)/2]); }
+  });
+  const n = Q.length, f = Q[0], l = Q[n-1];
+  const ext = [[Q[1][0], 2*f[1]-Q[1][1]], ...Q, [Q[n-2][0], 2*l[1]-Q[n-2][1]]];
+  const fx = v => v.toFixed(1);
+  let d = `M${fx(f[0])} ${fx(f[1])}`;
+  const segs = [];
+  for(let i=0;i<n-1;i++){
+    const [p0,p1,p2,p3] = [ext[i],ext[i+1],ext[i+2],ext[i+3]];
+    const c = ` C${fx(p1[0]+(p2[0]-p0[0])/6)} ${fx(p1[1]+(p2[1]-p0[1])/6)}, ${fx(p2[0]-(p3[0]-p1[0])/6)} ${fx(p2[1]-(p3[1]-p1[1])/6)}, ${fx(p2[0])} ${fx(p2[1])}`;
+    d += c; segs.push(`M${fx(p1[0])} ${fx(p1[1])}${c}`);
+  }
+  road.innerHTML = `<defs><mask id="mk" maskUnits="userSpaceOnUse"><path id="mp" d="${d}" fill="none" stroke="#fff" stroke-width="14"/></mask></defs>
+    <path d="${d}" fill="none" stroke="var(--line)" stroke-width="4" stroke-dasharray="1 12" stroke-linecap="round"/>
+    <path d="${d}" fill="none" stroke="var(--rose)" stroke-width="4" stroke-dasharray="1 12" stroke-linecap="round" mask="url(#mk)"/>`;
+  drawn = document.getElementById('mp');
+  len = drawn.getTotalLength();
+  drawn.style.strokeDasharray = len;
+  const meas = document.createElementNS('http://www.w3.org/2000/svg','path');
+  road.appendChild(meas); ql = [0]; qy = Q.map(q => q[1]);
+  for(const sd of segs){ meas.setAttribute('d', sd); ql.push(ql[ql.length-1] + meas.getTotalLength()); }
+  meas.remove();
+  cum = pinAt.map(i => ql[i]);
+  placeNow();
+};
+
+/* „most itt tartunk”: a mai nap helye a dátumos állomások között */
+const AT = STOPS.map(s => s.at ? new Date(s.at + 'T00:00:00+01:00').getTime() : null);
+const nowEl = document.getElementById('now');
+let follow = 0;
+const placeNow = () => {
+  if(!drawn || cum.length !== STOPS.length) return;
+  const t = Date.now();
+  let a = -1, b = -1;
+  for(let i=0;i<STOPS.length;i++){ if(AT[i]==null) continue; if(AT[i] <= t) a = i; else { b = i; break; } }
+  nowLen = a < 0 ? cum[b] : b < 0 ? cum[a] : cum[a] + (t-AT[a])/(AT[b]-AT[a]) * (cum[b]-cum[a]);
+  const p = drawn.getPointAtLength(nowLen), w = trail.clientWidth;
+  const x = Math.max(24, Math.min(w-24, p.x)), y = p.y;
+  nowEl.style.transform = `translate(${x}px,${y}px)`;
+  nowEl.className = 'now ready r';
+  const tag = nowEl.querySelector('.now-tag');
+  tag.style.top = '';
+  if(getComputedStyle(tag).display !== 'none'){
+    const tw = tag.offsetWidth, th = tag.offsetHeight, m = 12;
+    const boxes = [...stopsEl.children].flatMap(st => [st.querySelector('.card'), st.querySelector('.pin')].map(el => {
+      const L = st.offsetLeft + el.offsetLeft, T = st.offsetTop + el.offsetTop;
+      return [L-m, T-m, L+el.offsetWidth+m, T+el.offsetHeight+m];
+    }));
+    const free = (L,T) => L >= 0 && L+tw <= w && !boxes.some(B => L < B[2] && L+tw > B[0] && T < B[3] && T+th > B[1]);
+    const first = x < w/2 ? 'l' : 'r', sides = [first, first === 'l' ? 'r' : 'l'];
+    let pick = null;
+    for(const dy of [0,-20,20,-40,40,-60,60]){
+      for(const sd of sides){ if(free(sd === 'r' ? x+36 : x-36-tw, y-th/2+dy)){ pick = [sd,dy]; break; } }
+      if(pick) break;
+    }
+    if(pick){ nowEl.className = 'now ready ' + pick[0]; tag.style.top = (-th/2 + pick[1]) + 'px'; }
+    else nowEl.className = 'now ready notag';
+  }
+  const ms = TARGET - t, days = Math.floor(ms/864e5), home = ms <= 0;
+  document.getElementById('nowDot').textContent = home ? 'itthon' : 'most';
+  document.getElementById('nowTitle').textContent = home ? 'Megérkeztünk!' : 'Most itt tartunk';
+  document.getElementById('nowDays').textContent = home ? 'Végre együtt' : days >= 1 ? `még ${days} nap` : 'már csak órák';
+  progress();
+  if(Date.now() < follow) nowEl.scrollIntoView({block:'center'});
+};
+setInterval(placeNow, 60000);
+['wheel','touchstart','keydown'].forEach(ev => addEventListener(ev, () => { follow = 0; }, {passive:true}));
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const progress = () => {
+  if(!drawn) return;
+  const r = trail.getBoundingClientRect();
+  const y = innerHeight*.75 - r.top;
+  let L = len;
+  if(!reduce && qy.length && qy.length === ql.length){
+    if(y <= qy[0]) L = 0;
+    else for(let i=1;i<qy.length;i++) if(y <= qy[i]){ L = ql[i-1] + (y-qy[i-1])/(qy[i]-qy[i-1])*(ql[i]-ql[i-1]); break; }
+  }
+  drawn.style.strokeDashoffset = len - Math.min(L, nowLen);
+};
+const trailRO = new ResizeObserver(drawRoad); trailRO.observe(trail);
+addEventListener('scroll', progress, {passive:true});
+
+const io = new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('on');io.unobserve(e.target)}}),{threshold:.25});
+document.querySelectorAll('.stop').forEach(s=>io.observe(s));
+
+/* visszaszámláló */
+const $ = id => document.getElementById(id), pad = n => String(n).padStart(2,'0');
+const tick = () => {
+  let ms = TARGET - Date.now();
+  if(ms <= 0){
+    $('title').textContent = 'Végre újra együtt!';
+    $('d').textContent = $('h').textContent = $('m').textContent = $('s').textContent = '0';
+    return;
+  }
+  const d = Math.floor(ms/864e5), h = Math.floor(ms/36e5)%24, m = Math.floor(ms/6e4)%60, s = Math.floor(ms/1e3)%60;
+  $('d').textContent = d; $('h').textContent = pad(h); $('m').textContent = pad(m); $('s').textContent = pad(s);
+  $('title').textContent = d >= 1 ? `Még ${d} nap, és újra együtt` : 'Holnap már együtt!';
+};
+setInterval(tick, 1000); tick();
+
+$('letterTitle').textContent = LEVEL_CIM;
+const renderLetter = txt => {
+  $('letterBody').innerHTML = txt.replace(/\r\n?/g,'\n').trim().split(/\n\s*\n/).map(p => `<p class="hand">${esc(p.trim()).replace(/\n/g,'<br>')}</p>`).join('')
+    + (LEVEL_ALAIRAS.trim() ? `<p class="hand sig">${esc(LEVEL_ALAIRAS.trim())}</p>` : '');
+};
+renderLetter(LEVEL);
+$('jump').addEventListener('click', () => { follow = Date.now() + 5000; nowEl.scrollIntoView({block:'center', behavior: reduce ? 'auto' : 'smooth'}); });
+$('openBtn').addEventListener('click', e=>{ $('letterBody').classList.remove('hidden'); e.currentTarget.classList.add('hidden'); });
+}
+</script>
+<!-- ======================= TITKOS VIRÁG =======================
+     Ezt az egészet másold be az index.html-be, közvetlenül a </body> sor elé.
+     ============================================================== -->
+<style>
+.tv-btn{display:block;margin:-18px auto 26px;width:44px;height:44px;border:0;background:none;color:inherit;cursor:pointer;opacity:.22;transition:opacity .3s,transform .3s}
+.tv-btn:hover,.tv-btn:focus-visible{opacity:.85;transform:scale(1.15)}
+.tv-btn:focus-visible{outline:2px solid #f2b632;outline-offset:2px;border-radius:50%}
+.tv-btn svg{width:20px;height:20px}
+.tv-ov{position:fixed;inset:0;z-index:100;display:none;place-items:center;overflow:auto;
+ background:radial-gradient(circle at 50% 38%,#43173a 0%,#1d0b19 55%,#0f060d 100%);opacity:0;transition:opacity .5s}
+.tv-ov.tv-open{display:grid}
+.tv-ov.tv-show{opacity:1}
+.tv-box{display:flex;flex-direction:column;align-items:center;gap:4px;padding:56px 16px 24px}
+.tv-cv{display:block;width:min(88vw,64vh,560px);height:min(88vw,64vh,560px);touch-action:none;cursor:grab}
+.tv-cv:active{cursor:grabbing}
+.tv-txt{margin:6px 0 0;font:700 clamp(30px,5vw,42px)/1.1 Caveat,cursive;color:#ffd9e3;text-align:center;text-wrap:balance}
+.tv-sub{margin:0;font:16px/1.4 Nunito,system-ui,sans-serif;color:#d4b3c0;text-align:center}
+.tv-hint{margin:10px 0 0;font:13px/1.4 Nunito,system-ui,sans-serif;color:#9c7f8b;text-align:center}
+.tv-txt,.tv-sub,.tv-hint{opacity:0;transform:translateY(8px);transition:opacity .9s 2.2s,transform .9s 2.2s}
+.tv-show .tv-txt,.tv-show .tv-sub,.tv-show .tv-hint{opacity:1;transform:none}
+.tv-x{position:fixed;top:14px;right:14px;width:44px;height:44px;border-radius:50%;border:0;background:#ffffff1f;color:#fff;font:400 28px/1 system-ui,sans-serif;cursor:pointer}
+.tv-x:focus-visible{outline:2px solid #f2b632;outline-offset:2px}
+@media(prefers-reduced-motion:reduce){.tv-ov,.tv-txt,.tv-sub,.tv-hint{transition:none}}
+</style>
+
+<button class="tv-btn" id="tvBtn" type="button" aria-label="Titok">
+  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3c2.6 2 4.1 4.3 4.1 6.6 0 2.5-1.8 4.4-4.1 4.4S7.9 12.1 7.9 9.6C7.9 7.3 9.4 5 12 3z"/><path d="M11.3 13.6h1.4V21h-1.4z"/><path d="M12 18c1.6-2.3 3.6-2.9 5.2-2.4-.9 1.8-3 2.8-5.2 2.4z"/></svg>
+</button>
+
+<div class="tv-ov" id="tvOv" role="dialog" aria-modal="true" aria-label="Egy csokor neked">
+  <button class="tv-x" id="tvX" type="button" aria-label="Bezárás">×</button>
+  <div class="tv-box">
+    <canvas class="tv-cv" id="tvCv" aria-label="Egy forgó, kinyíló rózsacsokor"></canvas>
+    <p class="tv-txt" id="tvTxt"></p>
+    <p class="tv-sub" id="tvSub"></p>
+    <p class="tv-hint">Húzd az ujjaddal, és körbeforgathatod.</p>
+  </div>
+</div>
+
+<script>
+{
+/* A virág alatti szöveg: nyugodtan átírhatod (mindig a két ` jel közé írj) */
+const VIRAG_SZOVEG = `Egy csokor, előlegnek a több százezerből`;
+const VIRAG_ALSZOVEG = `A többit személyesen hozom.`;
+
+const btn = document.getElementById('tvBtn'), ov = document.getElementById('tvOv');
+const cv = document.getElementById('tvCv'), closeBtn = document.getElementById('tvX'), ctx = cv.getContext('2d');
+document.getElementById('tvTxt').textContent = VIRAG_SZOVEG;
+document.getElementById('tvSub').textContent = VIRAG_ALSZOVEG;
+const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* --- 3D segédek --- */
+const add = (a,b) => [a[0]+b[0], a[1]+b[1], a[2]+b[2]];
+const mul = (a,s) => [a[0]*s, a[1]*s, a[2]*s];
+const mix = (a,b,t) => [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t];
+const smooth = (e0,e1,v) => { const t = Math.min(1, Math.max(0, (v-e0)/(e1-e0))); return t*t*(3-2*t); };
+
+/* egy szirom vagy levél: a tövétől kiinduló, ívelt, öblös felület kis négyszögekből */
+function blade(o, out, xf = v => v){
+  const er = [Math.cos(o.phi), 0, Math.sin(o.phi)], et = [-Math.sin(o.phi), 0, Math.cos(o.phi)];
+  const rows = []; let p = o.base;
+  for(let k = 0; k <= o.nu; k++){
+    const u = k/o.nu, a = o.open + o.reflex*u*u;
+    const dir = add(mul(er, Math.sin(a)), [0, Math.cos(a), 0]);
+    const inward = add(mul(er, -Math.cos(a)), [0, Math.sin(a), 0]);
+    const hw = o.W * 0.5 * Math.max(0, o.shape(u)), row = [];
+    for(let j = 0; j <= o.nv; j++){
+      const v = j/o.nv*2 - 1;
+      let q = add(p, mul(et, v*hw));
+      q = add(q, mul(inward, (o.cup*v*v + o.fold*Math.abs(v))*hw - o.curl*u*u*u));
+      row.push(q);
+    }
+    rows.push(row);
+    p = add(p, mul(dir, o.L/o.nu));
+  }
+  for(let k = 0; k < o.nu; k++) for(let j = 0; j < o.nv; j++)
+    out.push({p:[xf(rows[k][j]), xf(rows[k+1][j]), xf(rows[k+1][j+1]), xf(rows[k][j+1])], c:o.color((k+.5)/o.nu, (j+.5)/o.nv*2 - 1)});
+}
+
+const PAL = [
+  [[150,18,56],[216,46,90],[255,152,178]],   // rózsaszín
+  [[120,8,30],[196,22,52],[245,96,120]],     // piros
+  [[222,96,138],[252,172,198],[255,232,240]] // halvány rózsaszín
+];
+const petalColor = (pal,u,v,r) => {
+  let c = mix(pal[0], pal[1], smooth(0,.55,u));
+  c = mix(c, pal[2], smooth(.5,1,u)*.75 + smooth(.55,1,Math.abs(v))*.12);
+  return mul(c, .84 + .16*r);
+};
+const green = (a,b) => (u) => mix(a, b, u);
+const sepal = green([46,96,48],[92,150,78]), leafC = green([38,90,44],[104,166,86]);
+const cross = (a,b) => [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
+const unit = a => { const m = Math.hypot(a[0],a[1],a[2]) || 1; return [a[0]/m, a[1]/m, a[2]/m]; };
+/* elforgatás a k tengely körül (Rodrigues) */
+const rot = (v,k,t) => { const c = Math.cos(t), s2 = Math.sin(t), kv = cross(k,v), d = k[0]*v[0]+k[1]*v[1]+k[2]*v[2];
+  return [v[0]*c + kv[0]*s2 + k[0]*d*(1-c), v[1]*c + kv[1]*s2 + k[1]*d*(1-c), v[2]*c + kv[2]*s2 + k[2]*d*(1-c)]; };
+
+/* egy rózsa a saját helyén: pos = fej helye, dir = merre dől, tilt = mennyire, sc = méret */
+function rose(b, pal, pos, dir, tilt, sc, spin, out){
+  const k = unit([dir[2], 0, -dir[0]]);
+  const xf = v => add(pos, rot(mul(v, sc), k, tilt));
+  const NP = 18, GOLD = 2.39996323;
+  for(let i = 0; i < NP; i++){
+    const r = i/(NP-1), phi = i*GOLD + spin, L = .36 + .66*Math.pow(r,.65), rb = .02 + .07*r;
+    blade({base:[Math.cos(phi)*rb, -.02 - .06*r, Math.sin(phi)*rb], phi, L, W:L*(.95 - .1*r),
+      open:(.08 + 1.42*Math.pow(r,1.35))*(.15 + .85*b), reflex:r*r*b, cup:1.25 - .65*r, fold:0, curl:.06*r*b,
+      nu:7, nv:5, shape:u => Math.pow(Math.sin(.2 + u*2.3), .7), color:(u,v) => petalColor(pal,u,v,r)}, out, xf);
+  }
+  for(let i = 0; i < 5; i++){
+    const phi = i*1.2566 + spin;
+    blade({base:[Math.cos(phi)*.05, -.1, Math.sin(phi)*.05], phi, L:.45, W:.17, open:.55 + 1.4*b, reflex:.35, cup:.35, fold:0, curl:0,
+      nu:3, nv:2, shape:u => Math.pow(1-u, .9)*Math.min(1, u*5 + .25), color:u => sepal(u)}, out, xf);
+  }
+  return xf([0,-.12,0]);
+}
+
+/* cső egy pontsor mentén (szárak) */
+function tube(path, rad, col, out, sides = 6){
+  const rings = path.map((p,i) => {
+    const t = unit(i < path.length-1 ? [path[i+1][0]-p[0], path[i+1][1]-p[1], path[i+1][2]-p[2]] : [p[0]-path[i-1][0], p[1]-path[i-1][1], p[2]-path[i-1][2]]);
+    const n1 = unit(cross(t, Math.abs(t[1]) < .9 ? [0,1,0] : [1,0,0])), n2 = cross(t, n1);
+    return Array.from({length:sides+1}, (_,s2) => { const a = s2/sides*Math.PI*2, c = Math.cos(a)*rad, d = Math.sin(a)*rad;
+      return [p[0] + n1[0]*c + n2[0]*d, p[1] + n1[1]*c + n2[1]*d, p[2] + n1[2]*c + n2[2]*d]; });
+  });
+  for(let i = 0; i < rings.length-1; i++) for(let s2 = 0; s2 < sides; s2++)
+    out.push({p:[rings[i][s2], rings[i+1][s2], rings[i+1][s2+1], rings[i][s2+1]], c:col});
+}
+
+/* a csokor elrendezése (egyszer kiszámolva) */
+const HEADS = [[0, .12, 0, 0, 0, .66, 0, 0]];
+for(let i = 0; i < 6; i++){ const a = i*Math.PI/3 + .25; HEADS.push([Math.cos(a)*.92, -.2 + (i%2)*.08, Math.sin(a)*.92, a, .5, .56 + (i%3)*.03, (i%3) + 1, i*.9]); }
+const DELAY = HEADS.map((h,i) => i ? .25 + ((i*7)%6)*.12 : 0);
+const SPRIGS = [];
+for(let i = 0; i < 7; i++){ const a = i*Math.PI/3.5 + .7, rr = .62 + (i%2)*.4;
+  for(let j = 0; j < 7; j++){ const aa = a + Math.sin(j*2.1)*.16, r2 = rr + Math.cos(j*1.7)*.1;
+    SPRIGS.push([Math.cos(aa)*r2, .02 + Math.sin(j*1.3)*.07 - (rr - .62)*.25, Math.sin(aa)*r2, .022 + (j%3)*.006]); } }
+
+/* a teljes csokor; e = eltelt idő (mp), ebből számolja, melyik rózsa mennyire nyílt ki */
+function build(e){
+  const Q = [], ends = [];
+  HEADS.forEach(([x,y,z,a,tilt,sc,pal,spin], i) => {
+    const b = still ? 1 : smooth(.4 + DELAY[i], 3.6 + DELAY[i], e);
+    ends.push([rose(b, PAL[pal % 3], [x,y,z], [Math.cos(a),0,Math.sin(a)], tilt, sc, spin, Q), [Math.cos(a),0,Math.sin(a)], tilt]);
+  });
+  // szárak: a fejektől a kötésig, onnan lefelé kicsit szétterülve
+  ends.forEach(([p,d,tilt], i) => {
+    const B = [d[0]*.06*(i ? 1 : 0), -1.5, d[2]*.06*(i ? 1 : 0)], bot = [d[0]*.16, -2.55, d[2]*.16], pts = [];
+    const c1 = [p[0] - d[0]*Math.sin(tilt)*.5, p[1] - .5, p[2] - d[2]*Math.sin(tilt)*.5];
+    for(let t = 0; t <= 1.0001; t += 1/6){ const m = 1-t; pts.push([m*m*p[0] + 2*m*t*c1[0] + t*t*B[0], m*m*p[1] + 2*m*t*c1[1] + t*t*B[1], m*m*p[2] + 2*m*t*c1[2] + t*t*B[2]]); }
+    for(let t = 1/3; t <= 1.0001; t += 1/3) pts.push([B[0] + (bot[0]-B[0])*t, B[1] + (bot[1]-B[1])*t, B[2] + (bot[2]-B[2])*t]);
+    tube(pts, .032, [50,108,52], Q);
+  });
+  // zöld levelek a rózsák között
+  for(let i = 0; i < 7; i++){ const phi = i*Math.PI*2/7 + .5;
+    blade({base:[Math.cos(phi)*.45, -.42, Math.sin(phi)*.45], phi, L:.62, W:.26, open:1.15, reflex:.5, cup:0, fold:-.3, curl:0,
+      nu:6, nv:4, shape:u => Math.pow(Math.sin(Math.PI*(.04 + .96*u)), .85), color:u => leafC(u)}, Q); }
+  // csomagolópapír: tölcsér hullámos szélű tetővel
+  const SEG = 28, ROWS = 6, P = [];
+  for(let r = 0; r <= ROWS; r++){ const t = r/ROWS, row = [];
+    for(let s2 = 0; s2 <= SEG; s2++){ const a = s2/SEG*Math.PI*2, top = -.62 + .07*Math.sin(a*6) + .12*Math.cos(a - .8);
+      const y = top + (-1.78 - top)*t, rad = 1.22 - (1.22 - .2)*Math.pow(t,.85);
+      row.push([Math.cos(a)*rad, y, Math.sin(a)*rad]); }
+    P.push(row); }
+  for(let r = 0; r < ROWS; r++) for(let s2 = 0; s2 < SEG; s2++)
+    Q.push({p:[P[r][s2], P[r+1][s2], P[r+1][s2+1], P[r][s2+1]], c: s2 % 2 ? [236,216,192] : [228,206,180]});
+  // masni: szalag a kötésnél, két hurok és két vége
+  const RB = [206,46,88], ry = -1.52, rr0 = .4;
+  for(let s2 = 0; s2 < 20; s2++){ const a0 = s2/20*Math.PI*2, a1 = (s2+1)/20*Math.PI*2;
+    Q.push({p:[[Math.cos(a0)*rr0, ry+.07, Math.sin(a0)*rr0], [Math.cos(a0)*rr0, ry-.07, Math.sin(a0)*rr0], [Math.cos(a1)*rr0, ry-.07, Math.sin(a1)*rr0], [Math.cos(a1)*rr0, ry+.07, Math.sin(a1)*rr0]], c:RB}); }
+  const front = [0, ry, rr0 + .01];
+  [[Math.PI/2 - 1.1, 1.35, .32, .2, 1.3], [Math.PI/2 + 1.1, 1.35, .32, .2, 1.3], [Math.PI/2 - .3, 2.75, .5, .1, .2], [Math.PI/2 + .3, 2.75, .5, .1, .2]]
+    .forEach(([phi,open,L,Wd,cup]) => blade({base:front, phi, L, W:Wd, open, reflex:.3, cup, fold:0, curl:0, nu:5, nv:3, shape:u => .6 + .4*Math.sin(Math.PI*u), color:() => RB}, Q));
+  return Q;
+}
+
+/* --- rajzolás: forgatás, vetítés, árnyalás, hátulról előre --- */
+let W = 0, H = 0, dpr = 1, yaw = .6, pitch = -.5, raf = 0, t0 = 0, last = 0, cache = null, cacheB = -1;
+let dragging = false, lx = 0, ly = 0;
+const LIGHT = (() => { const l = [-.45,.75,-.55], m = Math.hypot(...l); return l.map(v => v/m); })();
+const HALF = (() => { const h = [LIGHT[0], LIGHT[1], LIGHT[2]-1], m = Math.hypot(...h); return h.map(v => v/m); })();
+const SPARK = Array.from({length:34}, () => [Math.random(), Math.random(), .6 + Math.random()*1.6, Math.random()*6.3]);
+
+function size(){
+  const r = cv.getBoundingClientRect();
+  dpr = Math.min(2, devicePixelRatio || 1); W = r.width; H = r.height;
+  cv.width = Math.round(W*dpr); cv.height = Math.round(H*dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function render(Q, e){
+  ctx.clearRect(0, 0, W, H);
+  for(const [x,y,s,ph] of SPARK){
+    ctx.globalAlpha = .12 + .3*(.5 + .5*Math.sin(e*1.4 + ph));
+    ctx.fillStyle = '#ffd6e2'; ctx.beginPath(); ctx.arc(x*W, y*H, s, 0, 6.3); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  const cyw = Math.cos(yaw), syw = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch);
+  const D = 7, S = Math.min(W,H)/3.8, ox = W/2, oy = H*.5, items = [];
+  for(const q of Q){
+    const P = q.p.map(v => {
+      const x = v[0]*cyw - v[2]*syw, z0 = v[0]*syw + v[2]*cyw, y0 = v[1] + 1.05;
+      return [x, y0*cp - z0*sp, y0*sp + z0*cp];
+    });
+    const a = [P[1][0]-P[0][0], P[1][1]-P[0][1], P[1][2]-P[0][2]], c = [P[3][0]-P[0][0], P[3][1]-P[0][1], P[3][2]-P[0][2]];
+    let n = [a[1]*c[2]-a[2]*c[1], a[2]*c[0]-a[0]*c[2], a[0]*c[1]-a[1]*c[0]];
+    const nl = Math.hypot(n[0],n[1],n[2]) || 1; n = [n[0]/nl, n[1]/nl, n[2]/nl];
+    if(n[2] > 0) n = [-n[0], -n[1], -n[2]];
+    const diff = Math.max(0, n[0]*LIGHT[0] + n[1]*LIGHT[1] + n[2]*LIGHT[2]);
+    const spec = Math.pow(Math.max(0, n[0]*HALF[0] + n[1]*HALF[1] + n[2]*HALF[2]), 30)*.3;
+    const sh = .5 + .6*diff;
+    const col = q.c.map(v => Math.min(255, Math.round(v*sh + 255*spec)));
+    items.push([(P[0][2]+P[1][2]+P[2][2]+P[3][2])/4, P.map(p => { const f = D/(D + p[2]); return [ox + p[0]*f*S, oy - p[1]*f*S]; }), `rgb(${col[0]},${col[1]},${col[2]})`]);
+  }
+  for(const [vx,vy,vz,vr] of SPRIGS){
+    const x = vx*cyw - vz*syw, z0 = vx*syw + vz*cyw, y0 = vy + 1.05, y = y0*cp - z0*sp, z = y0*sp + z0*cp, f = D/(D + z);
+    items.push([z - .05, [ox + x*f*S, oy - y*f*S, vr*f*S], null]);
+  }
+  items.sort((A,B) => B[0] - A[0]);
+  ctx.lineWidth = .9; ctx.lineJoin = 'round';
+  for(const [, pts, col] of items){
+    if(!col){ ctx.fillStyle = '#fff7fa'; ctx.beginPath(); ctx.arc(pts[0], pts[1], Math.max(1.2, pts[2]), 0, 6.3); ctx.fill(); continue; }
+    ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+    for(let i = 1; i < 4; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+    ctx.closePath(); ctx.fillStyle = col; ctx.strokeStyle = col; ctx.fill(); ctx.stroke();
+  }
+}
+
+function frame(ts){
+  if(!t0){ t0 = ts; last = ts; }
+  const dt = Math.min(.05, (ts - last)/1000), e = (ts - t0)/1000; last = ts;
+  const done = still || e > 5;
+  if(!dragging && !still) yaw += dt*.35;
+  if(!cache || !done || cacheB !== 1){ cache = build(still ? 99 : e); cacheB = done ? 1 : 0; }
+  render(cache, e);
+  raf = requestAnimationFrame(frame);
+}
+
+function openFlower(){
+  ov.classList.add('tv-open');
+  document.documentElement.style.overflow = 'hidden';
+  requestAnimationFrame(() => {
+    ov.classList.add('tv-show'); size();
+    t0 = 0; cacheB = -1; cache = null; yaw = .6; pitch = -.5;
+    cancelAnimationFrame(raf); raf = requestAnimationFrame(frame);
+    closeBtn.focus();
+  });
+}
+function closeFlower(){
+  ov.classList.remove('tv-show'); cancelAnimationFrame(raf);
+  document.documentElement.style.overflow = '';
+  setTimeout(() => { if(!ov.classList.contains('tv-show')) ov.classList.remove('tv-open'); }, 500);
+  btn.focus();
+}
+btn.addEventListener('click', openFlower);
+closeBtn.addEventListener('click', closeFlower);
+ov.addEventListener('click', e => { if(e.target === ov) closeFlower(); });
+addEventListener('keydown', e => { if(e.key === 'Escape' && ov.classList.contains('tv-open')) closeFlower(); });
+addEventListener('resize', () => { if(ov.classList.contains('tv-open')) size(); });
+cv.addEventListener('pointerdown', e => { dragging = true; lx = e.clientX; ly = e.clientY; cv.setPointerCapture(e.pointerId); });
+cv.addEventListener('pointermove', e => {
+  if(!dragging) return;
+  yaw += (e.clientX - lx)*.01; pitch = Math.max(-1.25, Math.min(.35, pitch - (e.clientY - ly)*.008));
+  lx = e.clientX; ly = e.clientY;
+});
+const stopDrag = () => { dragging = false; };
+cv.addEventListener('pointerup', stopDrag); cv.addEventListener('pointercancel', stopDrag);
+}
+</script>
+<!-- ===================== TITKOS VIRÁG VÉGE ===================== -->
+
+</body>
+</html>
